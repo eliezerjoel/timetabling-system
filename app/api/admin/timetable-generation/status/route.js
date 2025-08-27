@@ -1,6 +1,6 @@
 export async function GET() {
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/api/admin/timetable/generation-status`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/timetable/generation-status`, {
       headers: {
         "Content-Type": "application/json",
       },

@@ -2,7 +2,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = params
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/admin/instructors/${id}/schedule`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/instructors/${id}/schedule`, {
       headers: {
         "Content-Type": "application/json",
       },

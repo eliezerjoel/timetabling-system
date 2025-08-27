@@ -1,50 +1,71 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Calendar, Play, CheckCircle, AlertCircle, ArrowLeft, Clock } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Calendar,
+  Play,
+  CheckCircle,
+  AlertCircle,
+  ArrowLeft,
+  Clock,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function TimetableGenerationPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [generating, setGenerating] = useState(false)
-  const [generationStatus, setGenerationStatus] = useState(null)
-  const [lastGenerated, setLastGenerated] = useState(null)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [generating, setGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState(null);
+  const [lastGenerated, setLastGenerated] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    if (status === "loading") return
+    if (status === "loading") return;
     if (!session || session.user.role !== "ADMIN") {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
-    fetchGenerationStatus()
-  }, [session, status, router])
+    fetchGenerationStatus();
+  }, [session, status, router]);
 
   const fetchGenerationStatus = async () => {
     try {
-      const response = await fetch("/api/admin/timetable-generation/status")
+      const response = await fetch("/api/admin/timetable-generation/status");
       if (response.ok) {
-        const data = await response.json()
-        setGenerationStatus(data.status)
-        setLastGenerated(data.lastGenerated)
+        const data = await response.json();
+        setGenerationStatus(data.status);
+        setLastGenerated(data.lastGenerated);
       }
     } catch (error) {
-      console.error("Error fetching generation status:", error)
+      console.error("Error fetching generation status:", error);
     }
-  }
+  };
 
   const handleGenerateTimetable = async () => {
-    setGenerating(true)
-    setError("")
-    setSuccess("")
+    setGenerating(true);
+    setError("");
+    setSuccess("");
+
+    // try {
+    //   const response = await fetch("/api/admin/timetable-generation", {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //   })
 
     try {
       const response = await fetch("/api/admin/timetable-generation", {
@@ -52,56 +73,43 @@ export default function TimetableGenerationPage() {
         headers: {
           "Content-Type": "application/json",
         },
-      })
+        body: JSON.stringify({
+          semester: "Sem1",
+          academicYear: "2025-2026",
+        }),
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        setSuccess("Timetable generation started successfully!")
-        setGenerationStatus("generating")
-
-        // Poll for completion
-        const pollInterval = setInterval(async () => {
-          try {
-            const statusResponse = await fetch("/api/admin/timetable-generation/status")
-            if (statusResponse.ok) {
-              const statusData = await statusResponse.json()
-              setGenerationStatus(statusData.status)
-
-              if (statusData.status === "completed") {
-                setSuccess("Timetable generated successfully!")
-                setLastGenerated(new Date().toISOString())
-                clearInterval(pollInterval)
-              } else if (statusData.status === "failed") {
-                setError("Timetable generation failed. Please try again.")
-                clearInterval(pollInterval)
-              }
-            }
-          } catch (error) {
-            console.error("Error polling status:", error)
-            clearInterval(pollInterval)
-          }
-        }, 2000)
-
-        // Clear interval after 5 minutes to prevent infinite polling
-        setTimeout(() => clearInterval(pollInterval), 300000)
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || "Failed to start timetable generation")
+        const data = await response.json();
+        setSuccess("Timetable generation started successfully!");
+        setGenerationStatus("generating");
+        // Get the generated timetable from the backend response
+        if (data && data.generatedTimetable) {
+          setSuccess("Timetable generated successfully!");
+          setGenerationStatus("completed");
+          setLastGenerated(new Date().toISOString());
+          setTimetable(data.generatedTimetable); // <-- Store timetable in state
+        } else {
+          setError(data.message || "Failed to generate timetable");
+        }
+            } else {
+        const errorData = await response.json();
+        setError(errorData.message || "Failed to start timetable generation");
       }
     } catch (error) {
-      console.error("Error generating timetable:", error)
-      setError("Failed to start timetable generation")
+      console.error("Error generating timetable:", error);
+      setError("Failed to start timetable generation");
     } finally {
-      setGenerating(false)
+      setGenerating(false);
     }
-  }
+  };
 
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -118,7 +126,9 @@ export default function TimetableGenerationPage() {
                 </Link>
               </Button>
               <Calendar className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold text-primary">Timetable Generation</h1>
+              <h1 className="text-2xl font-bold text-primary">
+                Timetable Generation
+              </h1>
             </div>
           </div>
         </div>
@@ -159,7 +169,9 @@ export default function TimetableGenerationPage() {
                 {generationStatus === "completed" && (
                   <>
                     <CheckCircle className="h-6 w-6 text-green-600" />
-                    <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                    <Badge className="bg-green-100 text-green-800">
+                      Completed
+                    </Badge>
                   </>
                 )}
                 {generationStatus === "failed" && (
@@ -189,8 +201,9 @@ export default function TimetableGenerationPage() {
           <CardHeader>
             <CardTitle>Generate New Timetable</CardTitle>
             <CardDescription>
-              This will create a new automated timetable based on current courses, instructors, and constraints. The
-              process may take several minutes to complete.
+              This will create a new automated timetable based on current
+              courses, instructors, and constraints. The process may take
+              several minutes to complete.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -231,7 +244,9 @@ export default function TimetableGenerationPage() {
         <Card>
           <CardHeader>
             <CardTitle>Generation History</CardTitle>
-            <CardDescription>Recent timetable generation attempts</CardDescription>
+            <CardDescription>
+              Recent timetable generation attempts
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -239,8 +254,12 @@ export default function TimetableGenerationPage() {
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="font-medium">Generation completed successfully</p>
-                    <p className="text-sm text-muted-foreground">December 15, 2024 at 2:30 PM</p>
+                    <p className="font-medium">
+                      Generation completed successfully
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      December 15, 2024 at 2:30 PM
+                    </p>
                   </div>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Success</Badge>
@@ -250,8 +269,12 @@ export default function TimetableGenerationPage() {
                 <div className="flex items-center space-x-3">
                   <AlertCircle className="h-5 w-5 text-red-600" />
                   <div>
-                    <p className="font-medium">Generation failed - insufficient data</p>
-                    <p className="text-sm text-muted-foreground">December 14, 2024 at 10:15 AM</p>
+                    <p className="font-medium">
+                      Generation failed - insufficient data
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      December 14, 2024 at 10:15 AM
+                    </p>
                   </div>
                 </div>
                 <Badge variant="destructive">Failed</Badge>
@@ -261,8 +284,12 @@ export default function TimetableGenerationPage() {
                 <div className="flex items-center space-x-3">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
-                    <p className="font-medium">Generation completed successfully</p>
-                    <p className="text-sm text-muted-foreground">December 10, 2024 at 4:45 PM</p>
+                    <p className="font-medium">
+                      Generation completed successfully
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      December 10, 2024 at 4:45 PM
+                    </p>
                   </div>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Success</Badge>
@@ -272,5 +299,5 @@ export default function TimetableGenerationPage() {
         </Card>
       </main>
     </div>
-  )
+  );
 }

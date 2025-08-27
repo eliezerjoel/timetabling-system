@@ -2,7 +2,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = params
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/admin/instructors/${id}`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/instructors/${id}`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -25,7 +25,7 @@ export async function PUT(request, { params }) {
     const { id } = params
     const body = await request.json()
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/admin/instructors/${id}`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/instructors/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +49,7 @@ export async function DELETE(request, { params }) {
   try {
     const { id } = params
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/admin/instructors/${id}`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/instructors/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

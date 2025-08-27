@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Calendar, Clock, MapPin, Users, BookOpen, Home, LogOut } from 'lucide-react'
+import { Calendar, Clock, MapPin, Users, BookOpen, Home } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -96,16 +96,6 @@ export default function InstructorDashboard() {
                   View Full Timetable
                 </Link>
               </Button>
-              {/*  Added signout button */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center space-x-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
-              </Button>
             </div>
           </div>
         </div>
@@ -118,7 +108,7 @@ export default function InstructorDashboard() {
           </Alert>
         )}
 
-        {!schedule ?  (
+        {!schedule ? (
           <Card className="text-center">
             <CardContent className="pt-6">
               <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -291,4 +281,3 @@ export default function InstructorDashboard() {
     </div>
   )
 }
-

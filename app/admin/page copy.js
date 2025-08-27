@@ -1,10 +1,10 @@
 "use client"
 
-import { useSession, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, BookOpen, Building2, GraduationCap, Calendar, Settings, BarChart3, Clock, LogOut } from "lucide-react"
+import { Users, BookOpen, Building2, GraduationCap, Calendar, Settings, BarChart3, Clock } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
@@ -92,15 +92,6 @@ export default function AdminDashboard() {
               <span className="text-sm text-muted-foreground">Welcome, {session.user.name}</span>
               <Button asChild variant="outline" size="sm">
                 <Link href="/">View Timetable</Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex items-center space-x-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
               </Button>
             </div>
           </div>

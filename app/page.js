@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, User, Calendar, Clock } from "lucide-react"
+import { Search, User, Calendar, Clock, LogOut } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -98,6 +98,15 @@ export default function HomePage() {
                       <Link href="/instructor">My Schedule</Link>
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="flex items-center space-x-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </Button>
                 </div>
               ) : (
                 <Button asChild>

@@ -26,8 +26,6 @@ const testUsers = [
 ]
 
 export const authOptions = {
-  secret: process.env.NEXTAUTH_SECRET || "nOfUfQrTzPs5etoiP5G8sWkYXJz2337XaSNS2Ys7+gM=",
-  nextAuthUrl: process.env.NEXTAUTH_URL || "http://localhost:3000",
   providers: [
     CredentialsProvider({
       name: "credentials",

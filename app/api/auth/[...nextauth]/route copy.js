@@ -1,33 +1,7 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-const testUsers = [
-  {
-    id: "1",
-    email: "admin@university.edu",
-    password: "admin123",
-    name: "Admin User",
-    role: "ADMIN",
-  },
-  {
-    id: "2",
-    email: "instructor@university.edu",
-    password: "instructor123",
-    name: "John Smith",
-    role: "INSTRUCTOR",
-  },
-  {
-    id: "3",
-    email: "student@university.edu",
-    password: "student123",
-    name: "Jane Doe",
-    role: "STUDENT",
-  },
-]
-
 export const authOptions = {
-  secret: process.env.NEXTAUTH_SECRET || "nOfUfQrTzPs5etoiP5G8sWkYXJz2337XaSNS2Ys7+gM=",
-  nextAuthUrl: process.env.NEXTAUTH_URL || "http://localhost:3000",
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -37,19 +11,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          const user = testUsers.find((u) => u.email === credentials.email && u.password === credentials.password)
-
-          if (user) {
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-            }
-          }
-
-          // Uncomment below when you have your Spring Boot backend running:
-          /*
+          // Call Spring Boot backend for authentication
           const response = await fetch(`${process.env.BACKEND_URL}/api/auth/login`, {
             method: "POST",
             headers: {
@@ -70,8 +32,6 @@ export const authOptions = {
               role: user.role, // ADMIN, INSTRUCTOR, STUDENT
             }
           }
-          */
-
           return null
         } catch (error) {
           console.error("Authentication error:", error)
@@ -103,3 +63,5 @@ export const authOptions = {
 const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
+
+

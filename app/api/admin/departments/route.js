@@ -1,6 +1,6 @@
 export async function GET() {
   try {
-    const response = await fetch(`${process.env.BACKEND_URL}/api/admin/departments`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/departments`, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -22,7 +22,7 @@ export async function POST(request) {
   try {
     const body = await request.json()
 
-    const response = await fetch(`${process.env.BACKEND_URL}/api/admin/departments`, {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/departments`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
