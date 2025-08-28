@@ -4,9 +4,9 @@ import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, User, Calendar, Clock, LogOut } from "lucide-react"
+import { Search, Calendar, Clock, LogOut } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -15,6 +15,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [error, setError] = useState("")
+
+  const timeSlots = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
 
   useEffect(() => {
     fetchTimetable()
@@ -39,26 +41,63 @@ export default function HomePage() {
     }
   }
 
+  // Organize data to group by day and department
+  const organizeByDayAndDepartment = (departments) => {
+    const organized = []
+
+    departments?.forEach((department) => {
+      const departmentData = {
+        departmentId: department.departmentId,
+        departmentName: department.departmentName,
+        daySchedules: {},
+      }
+
+      // Initialize days
+      timeSlots.forEach((day) => {
+        departmentData.daySchedules[day] = []
+      })
+
+      // Group classes by day
+      department.classes?.forEach((cls) => {
+        if (departmentData.daySchedules[cls.day]) {
+          departmentData.daySchedules[cls.day].push({
+            courseId: cls.id,
+            courseCode: cls.courseCode,
+            courseName: cls.courseName,
+            instructor: cls.instructor,
+            timeSlot: `${cls.startTime} - ${cls.endTime}`,
+            room: cls.room || null,
+          })
+        }
+      })
+
+      organized.push(departmentData)
+    })
+
+    return organized
+  }
+
+  // Filter the timetable based on the search term
   const filteredTimetable = timetableData?.departments
     ?.filter((department) =>
-      department.courses.some(
-        (course) =>
-          course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          course.instructor.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
+      department.classes.some(
+        (cls) =>
+          cls.courseName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          cls.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          department.departmentName?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     )
     .map((department) => ({
       ...department,
-      courses: department.courses.filter(
-        (course) =>
-          course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          course.instructor.toLowerCase().includes(searchTerm.toLowerCase()),
+      classes: department.classes.filter(
+        (cls) =>
+          cls.courseName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          cls.courseCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          department.departmentName?.toLowerCase().includes(searchTerm.toLowerCase())
       ),
     }))
 
-  const timeSlots = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+  const organizedTimetable = timetableData ? organizeByDayAndDepartment(filteredTimetable) : null
 
   if (loading) {
     return (
@@ -156,69 +195,71 @@ export default function HomePage() {
 
             {/* Timetable Display */}
             <div className="space-y-8">
-              {filteredTimetable?.map((department) => (
-                <Card key={department.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <User className="h-5 w-5" />
-                      <span>{department.name}</span>
-                      <Badge variant="outline">{department.courses.length} courses</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="border-b border-border">
-                            <th className="text-left p-3 font-semibold bg-muted">Course</th>
-                            <th className="text-left p-3 font-semibold bg-muted">Code</th>
-                            <th className="text-left p-3 font-semibold bg-muted">Instructor</th>
-                            {timeSlots.map((day) => (
-                              <th key={day} className="text-center p-3 font-semibold bg-muted min-w-[120px]">
-                                {day}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {department.courses.map((course, index) => (
-                            <tr
-                              key={course.id}
-                              className={`border-b border-border ${index % 2 === 0 ? "bg-background" : "bg-muted/30"}`}
-                            >
-                              <td className="p-3 font-medium">{course.name}</td>
-                              <td className="p-3">
-                                <Badge variant="outline">{course.code}</Badge>
-                              </td>
-                              <td className="p-3 text-muted-foreground">{course.instructor}</td>
-                              {timeSlots.map((day) => {
-                                const timeSlot = course.timeSlots?.find((slot) => slot.day === day)
-                                return (
-                                  <td key={day} className="p-3 text-center">
-                                    {timeSlot ? (
-                                      <div className="space-y-1">
-                                        <div className="text-sm font-medium">
-                                          {timeSlot.startTime} - {timeSlot.endTime}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">{timeSlot.room}</div>
+              {organizedTimetable?.map((department) => (
+                <div key={department.departmentId} className="border border-border rounded-lg overflow-hidden">
+                  {/* Department Header */}
+                  <div className="bg-primary text-primary-foreground p-4 text-center">
+                    <h2 className="text-lg font-bold">{department.departmentName}</h2>
+                  </div>
+
+                  {/* Day-by-day Schedule */}
+                  <div className="bg-card">
+                    {timeSlots.map((day) => {
+                      const dayClasses = department.daySchedules[day]
+                      if (!dayClasses || dayClasses.length === 0) return null
+
+                      return (
+                        <div key={day} className="border-b border-border last:border-b-0">
+                          {/* Day Header */}
+                          <div className="bg-muted p-3">
+                            <h3 className="font-semibold text-center">{day}</h3>
+                          </div>
+
+                          {/* Classes Table */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="border-b border-border bg-muted/50">
+                                  <th className="text-left p-3 font-medium">Course</th>
+                                  <th className="text-left p-3 font-medium">Instructor</th>
+                                  <th className="text-left p-3 font-medium">Timeslot</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {dayClasses.map((classItem, index) => (
+                                  <tr
+                                    key={`${classItem.courseId}-${classItem.timeSlot}-${index}`}
+                                    className="border-b border-border last:border-b-0 hover:bg-muted/30"
+                                  >
+                                    <td className="p-3">
+                                      <div>
+                                        <span className="font-medium">{classItem.courseCode}</span>
+                                        <span className="ml-2 text-muted-foreground">{classItem.courseName}</span>
                                       </div>
-                                    ) : (
-                                      <span className="text-muted-foreground">-</span>
-                                    )}
-                                  </td>
-                                )
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
+                                    </td>
+                                    <td className="p-3 text-muted-foreground">{classItem.instructor}</td>
+                                    <td className="p-3">
+                                      <div>
+                                        <span className="font-medium">{classItem.timeSlot}</span>
+                                        {classItem.room && (
+                                          <div className="text-xs text-muted-foreground">{classItem.room}</div>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
               ))}
             </div>
 
-            {filteredTimetable?.length === 0 && searchTerm && (
+            {organizedTimetable?.length === 0 && searchTerm && (
               <Card className="text-center">
                 <CardContent className="pt-6">
                   <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
